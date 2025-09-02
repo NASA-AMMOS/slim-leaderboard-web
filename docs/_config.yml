@@ -1,0 +1,26 @@
+title: SLIM Best Practices Leaderboard
+description: Analyze GitHub repositories for SLIM best practices compliance
+baseurl: "/slim-leaderboard-web"
+url: "https://nasa-ammos.github.io"
+
+# GitHub Pages settings
+plugins:
+  - jekyll-relative-links
+
+# Enable relative links
+relative_links:
+  enabled: true
+  collections: true
+
+# Include static assets
+include:
+  - "_*"
+  - ".nojekyll"
+
+# Exclude unnecessary files
+exclude:
+  - "*.py"
+  - "requirements.txt"
+  - "README.md"
+  - ".git*"
+  - "slim-leaderboard/"

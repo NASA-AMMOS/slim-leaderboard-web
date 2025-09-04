@@ -61,14 +61,17 @@ def analyze_repository():
         verbose = data.get('verbose', False)
         emoji = data.get('emoji', False)
         unsorted = data.get('unsorted', False)
+        github_token = data.get('github_token', '')
         
-        if not os.getenv('GITHUB_TOKEN'):
+        # Use token from request or environment variable
+        if not github_token and not os.getenv('GITHUB_TOKEN'):
             return jsonify({
-                'error': 'GitHub token not configured. Please set GITHUB_TOKEN environment variable.'
+                'error': 'GitHub token not provided. Please provide a token in the form or set GITHUB_TOKEN environment variable.'
             }), 500
         
-        # Add the local source to Python path
-        sys.path.insert(0, '/Users/kyun/Downloads/SLIM/slim-leaderboard-web/slim-leaderboard/src')
+        # Set the token for the analysis
+        if github_token:
+            os.environ['GITHUB_TOKEN'] = github_token
         
         try:
             from jpl.slim.leaderboard import main as slim_main

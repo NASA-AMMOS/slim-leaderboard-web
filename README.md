@@ -1,24 +1,10 @@
-<!-- Header block for project -->
-<hr>
+# SLIM Leaderboard Web Interface
 
-<div align="center">
+A professional web interface for analyzing GitHub repositories and organizations using the SLIM Best Practices Leaderboard tool.
 
-[INSERT YOUR LOGO IMAGE HERE (IF APPLICABLE)]
-<!-- ☝️ Replace with your logo (if applicable) via ![](https://uri-to-your-logo-image) ☝️ -->
-<!-- ☝️ If you see logo rendering errors, make sure you're not using indentation, or try an HTML IMG tag -->
+🌐 **Live Demo:** https://nasa-ammos.github.io/slim-leaderboard-web/
 
-<h1 align="center">[INSERT YOUR REPO / PROJ NAME HERE]</h1>
-<!-- ☝️ Replace with your repo name ☝️ -->
-
-</div>
-
-<pre align="center">[INSERT A SINGLE SENTENCE DESCRIBING THE PURPOSE OF YOUR REPO / PROJ]</pre>
-<!-- ☝️ Replace with a single sentence describing the purpose of your repo / proj ☝️ -->
-
-<!-- Header block for project -->
-
-[INSERT YOUR BADGES HERE (SEE: https://shields.io)] [![SLIM](https://img.shields.io/badge/Best%20Practices%20from-SLIM-blue)](https://nasa-ammos.github.io/slim/)
-<!-- ☝️ Add badges via: https://shields.io e.g. ![](https://img.shields.io/github/your_chosen_action/your_org/your_repo) ☝️ -->
+[![SLIM](https://img.shields.io/badge/Best%20Practices%20from-SLIM-blue)](https://nasa-ammos.github.io/slim/)
 
 [INSERT SCREENSHOT OF YOUR SOFTWARE, IF APPLICABLE]
 <!-- ☝️ Screenshot of your software (if applicable) via ![](https://uri-to-your-screenshot) ☝️ -->

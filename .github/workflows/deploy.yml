@@ -1,3 +1,46 @@
+name: Deploy SLIM Leaderboard Web Interface
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install slim-leaderboard dependencies
+      run: |
+        cd slim-leaderboard
+        pip install -e .
+        
+    - name: Install Flask dependencies
+      run: |
+        pip install -r requirements.txt
+        
+    - name: Create static GitHub Pages version
+      run: |
+        mkdir -p gh-pages
+        # Copy static files
+        cp index.html gh-pages/
+        cp styles.css gh-pages/
+        # Create modified script.js for GitHub Pages (static version)
+        sed 's|/api/analyze|#|g' script.js > gh-pages/script.js
+        
+        # Create static version of script that shows instructions
+        cat > gh-pages/script.js << 'EOF'
 class SlimLeaderboardApp {
     constructor() {
         this.form = document.getElementById('repository-form');
@@ -116,130 +159,86 @@ class SlimLeaderboardApp {
             normalizedUrl = targetUrl.toLowerCase().replace(/\/$/, '');
         }
 
-        const response = await fetch('/api/analyze', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                repository_url: normalizedUrl,
-                target_type: targetType,
-                output_format: outputFormat,
-                verbose: verbose,
-                emoji: emoji,
-                unsorted: unsorted,
-                github_token: githubToken
-            })
-        });
+        // For GitHub Pages static version, show instructions
+        const analysisNote = `# SLIM Best Practices Analysis
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Analysis failed');
-        }
+**Target:** ${normalizedUrl}
+**Type:** ${targetType}
+**Format:** ${outputFormat}
 
-        return await response.json();
-    }
+## GitHub Pages Static Version - Instructions
 
-    setLoadingState(isLoading) {
-        if (isLoading) {
-            this.submitBtn.disabled = true;
-            this.btnText.style.display = 'none';
-            this.loader.style.display = 'block';
-        } else {
-            this.submitBtn.disabled = false;
-            this.btnText.style.display = 'block';
-            this.loader.style.display = 'none';
-        }
-    }
+This is the static GitHub Pages version. To run the actual analysis:
 
-    showResults(data, format) {
-        this.hideError();
-        
-        let formattedOutput = '';
-        
-        if (format === 'MARKDOWN') {
-            formattedOutput = this.formatMarkdownOutput(data.output);
-        } else {
-            formattedOutput = `<pre>${this.escapeHtml(data.output)}</pre>`;
-        }
-        
-        this.resultsContent.innerHTML = formattedOutput;
-        this.resultsSection.style.display = 'block';
-        this.resultsSection.classList.add('fade-in');
-        
-        this.resultsSection.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-        });
-    }
+### Option 1: Use Command Line
 
-    formatMarkdownOutput(output) {
-        if (!output) return 'No output received';
-        
-        const lines = output.split('\n');
-        let formattedHtml = '';
-        let inCodeBlock = false;
-        
-        for (const line of lines) {
-            if (line.startsWith('```')) {
-                if (inCodeBlock) {
-                    formattedHtml += '</pre>\n';
-                    inCodeBlock = false;
-                } else {
-                    formattedHtml += '<pre><code>';
-                    inCodeBlock = true;
-                }
-                continue;
-            }
-            
-            if (inCodeBlock) {
-                formattedHtml += this.escapeHtml(line) + '\n';
-                continue;
-            }
-            
-            if (line.startsWith('# ')) {
-                formattedHtml += `<h1>${this.escapeHtml(line.substring(2))}</h1>\n`;
-            } else if (line.startsWith('## ')) {
-                formattedHtml += `<h2>${this.escapeHtml(line.substring(3))}</h2>\n`;
-            } else if (line.startsWith('### ')) {
-                formattedHtml += `<h3>${this.escapeHtml(line.substring(4))}</h3>\n`;
-            } else if (line.startsWith('**') && line.endsWith('**')) {
-                const content = line.slice(2, -2);
-                formattedHtml += `<p><strong>${this.escapeHtml(content)}</strong></p>\n`;
-            } else if (line.trim()) {
-                // Handle links
-                let processedLine = line;
-                processedLine = processedLine.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-                formattedHtml += `<p>${processedLine}</p>\n`;
-            } else {
-                formattedHtml += '<br>\n';
-            }
-        }
-        
-        if (inCodeBlock) {
-            formattedHtml += '</code></pre>\n';
-        }
-        
-        return formattedHtml;
+1. **Install SLIM Leaderboard:**
+   \`\`\`bash
+   pip install git+https://github.com/NASA-AMMOS/slim-leaderboard.git
+   \`\`\`
+
+2. **Set your GitHub token:**
+   \`\`\`bash
+   export GITHUB_TOKEN="${githubToken.substring(0, 8)}..."
+   \`\`\`
+
+3. **Run the analysis:**
+   \`\`\`bash
+   # Create config file
+   echo '{"targets": [{"type": "${targetType}", "name": "${normalizedUrl}"}]}' > config.json
+   
+   # Run analysis
+   slim-leaderboard --output_format ${outputFormat}${verbose ? ' --verbose' : ''}${emoji ? ' --emoji' : ''}${unsorted ? ' --unsorted' : ''} config.json
+   \`\`\`
+
+### Option 2: Use Full Web Application Locally
+
+For real-time web analysis, clone and run the Flask application:
+
+\`\`\`bash
+git clone --recursive https://github.com/NASA-AMMOS/slim-leaderboard-web.git
+cd slim-leaderboard-web
+pip install -r requirements.txt
+pip install -e slim-leaderboard/
+export GITHUB_TOKEN=your_token_here
+python app.py
+\`\`\`
+
+Then visit http://localhost:8081 for the full interactive experience.
+
+## About SLIM
+
+The Software Lifecycle Improvement & Modernization (SLIM) initiative provides best practices for NASA AMMOS software development.
+
+**Learn more:** [nasa-ammos.github.io/slim](https://nasa-ammos.github.io/slim/)
+        `;
+
+        return {
+            success: true,
+            output: analysisNote,
+            target_url: normalizedUrl,
+            target_type: targetType,
+            format: outputFormat
+        };
     }
 
     showProgress(targetType) {
         const isOrg = targetType === 'organization';
         const message = isOrg 
-            ? 'Analyzing organization repositories...' 
-            : 'Analyzing repository...';
+            ? 'Generating analysis instructions...' 
+            : 'Generating analysis instructions...';
         
         this.progressText.textContent = message;
         this.progressSection.style.display = 'block';
         this.progressSection.classList.add('fade-in');
         
-        // Simulate progress for real analysis
-        this.simulateProgress(isOrg);
+        // Quick progress for instruction generation
+        this.simulateProgress(false);
     }
 
     simulateProgress(isOrganization) {
-        const duration = isOrganization ? 120000 : 30000; // 2 minutes for org, 30 seconds for repo
-        const interval = 1000;
+        const duration = 3000; // 3 seconds for instruction generation
+        const interval = 100;
         const totalSteps = duration / interval;
         let currentStep = 0;
         
@@ -248,67 +247,10 @@ class SlimLeaderboardApp {
             const progress = (currentStep / totalSteps) * 100;
             this.progressBar.style.width = `${progress}%`;
             
-            // Update progress message
-            if (progress < 25) {
-                this.progressText.textContent = 'Fetching repository data...';
-            } else if (progress < 50) {
-                this.progressText.textContent = 'Analyzing SLIM best practices...';
-            } else if (progress < 75) {
-                this.progressText.textContent = 'Processing compliance checks...';
-            } else if (progress < 95) {
-                this.progressText.textContent = 'Generating report...';
-            } else {
-                this.progressText.textContent = 'Finalizing analysis...';
-            }
-            
             if (currentStep >= totalSteps) {
                 clearInterval(this.progressInterval);
-                this.progressText.textContent = 'Analysis complete!';
+                this.progressText.textContent = 'Instructions ready!';
                 this.progressBar.style.width = '100%';
             }
         }, interval);
     }
-
-    hideProgress() {
-        if (this.progressInterval) {
-            clearInterval(this.progressInterval);
-        }
-        this.progressSection.style.display = 'none';
-        this.progressBar.style.width = '0%';
-    }
-
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    showError(message) {
-        this.errorMessage.textContent = message;
-        this.errorSection.style.display = 'block';
-        this.hideResults();
-        
-        this.errorSection.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-        });
-    }
-
-    hideError() {
-        this.errorSection.style.display = 'none';
-    }
-
-    hideResults() {
-        this.resultsSection.style.display = 'none';
-    }
-
-    clearResults() {
-        this.hideResults();
-        this.hideError();
-        this.hideProgress();
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    new SlimLeaderboardApp();
-});

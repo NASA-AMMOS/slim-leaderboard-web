@@ -16,7 +16,6 @@ class SlimLeaderboardApp {
         this.progressSection = document.getElementById('progress-section');
         this.progressBar = document.getElementById('progress-bar');
         this.progressText = document.getElementById('progress-text');
-        this.githubTokenInput = document.getElementById('github-token');
         
         this.initializeEventListeners();
     }
@@ -54,7 +53,7 @@ class SlimLeaderboardApp {
         const verbose = formData.get('verbose') === 'on';
         const emoji = formData.get('emoji') === 'on';
         const unsorted = formData.get('unsorted') === 'on';
-        const githubToken = formData.get('github-token') || '';
+        // No need for token - server uses GITHUB_TOKEN from environment
 
         if (!this.validateGitHubUrl(targetUrl, targetType)) {
             const errorMsg = targetType === 'organization' 
@@ -76,8 +75,7 @@ class SlimLeaderboardApp {
                 outputFormat,
                 verbose,
                 emoji,
-                unsorted,
-                githubToken
+                unsorted
             });
             
             this.hideProgress();
@@ -103,7 +101,7 @@ class SlimLeaderboardApp {
     }
 
     async analyzeTarget(options) {
-        const { targetUrl, targetType, outputFormat, verbose, emoji, unsorted, githubToken } = options;
+        const { targetUrl, targetType, outputFormat, verbose, emoji, unsorted } = options;
         
         // Normalize the URL for organization (remove trailing slash, convert to lowercase)
         let normalizedUrl = targetUrl;
@@ -122,8 +120,7 @@ class SlimLeaderboardApp {
                 output_format: outputFormat,
                 verbose: verbose,
                 emoji: emoji,
-                unsorted: unsorted,
-                github_token: githubToken
+                unsorted: unsorted
             })
         });
 

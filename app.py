@@ -61,19 +61,14 @@ def analyze_repository():
         verbose = data.get('verbose', False)
         emoji = data.get('emoji', False)
         unsorted = data.get('unsorted', False)
-        github_token = data.get('github_token', '')
         
-        # Use token from: 1) request, 2) environment variable, 3) error
-        if github_token:
-            # User provided token takes precedence
-            os.environ['GITHUB_TOKEN'] = github_token
-        elif os.getenv('GITHUB_TOKEN'):
-            # Use existing environment token
-            logger.info("Using GITHUB_TOKEN from environment")
-        else:
+        # Use token from environment variable
+        if not os.getenv('GITHUB_TOKEN'):
             return jsonify({
-                'error': 'GitHub token not configured. Please provide a token or deploy with GITHUB_TOKEN set.'
+                'error': 'GitHub token not configured. Please set GITHUB_TOKEN environment variable.'
             }), 500
+        
+        logger.info("Using GITHUB_TOKEN from environment")
         
         try:
             from jpl.slim.leaderboard import main as slim_main

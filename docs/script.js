@@ -16,7 +16,6 @@ class SlimLeaderboardApp {
         this.progressSection = document.getElementById('progress-section');
         this.progressBar = document.getElementById('progress-bar');
         this.progressText = document.getElementById('progress-text');
-        this.githubTokenInput = document.getElementById('github-token');
         
         this.initializeEventListeners();
     }
@@ -54,12 +53,7 @@ class SlimLeaderboardApp {
         const verbose = formData.get('verbose') === 'on';
         const emoji = formData.get('emoji') === 'on';
         const unsorted = formData.get('unsorted') === 'on';
-        const githubToken = formData.get('github-token');
-
-        if (!githubToken) {
-            this.showError('GitHub Personal Access Token is required');
-            return;
-        }
+        // No token needed for static version
 
         if (!this.validateGitHubUrl(targetUrl, targetType)) {
             const errorMsg = targetType === 'organization' 
@@ -81,8 +75,7 @@ class SlimLeaderboardApp {
                 outputFormat,
                 verbose,
                 emoji,
-                unsorted,
-                githubToken
+                unsorted
             });
             
             this.hideProgress();
@@ -108,7 +101,7 @@ class SlimLeaderboardApp {
     }
 
     async analyzeTarget(options) {
-        const { targetUrl, targetType, outputFormat, verbose, emoji, unsorted, githubToken } = options;
+        const { targetUrl, targetType, outputFormat, verbose, emoji, unsorted } = options;
         
         // Normalize the URL for organization (remove trailing slash, convert to lowercase)
         let normalizedUrl = targetUrl;
@@ -116,49 +109,72 @@ class SlimLeaderboardApp {
             normalizedUrl = targetUrl.toLowerCase().replace(/\/$/, '');
         }
 
-        // For GitHub Pages, we'll show a message about the limitation
+        // Generate instructions for running the analysis
         const analysisNote = `
-# SLIM Best Practices Analysis
+# SLIM Best Practices Analysis Instructions
 
 **Target:** ${normalizedUrl}
 **Type:** ${targetType}
 **Format:** ${outputFormat}
 
-## Note for GitHub Pages Version
+## How to Run Analysis
 
-This web interface is designed to work with the SLIM Leaderboard tool. 
+This is a static GitHub Pages site. To run the actual SLIM analysis, you have several options:
 
-To perform the actual analysis:
+### Option 1: Use Our Flask Web Application
 
-1. **Install SLIM Leaderboard locally:**
-   \`\`\`bash
-   pip install slim-leaderboard
-   \`\`\`
-
-2. **Set your GitHub token:**
-   \`\`\`bash
-   export GITHUB_TOKEN="${githubToken.substring(0, 8)}..."
-   \`\`\`
-
-3. **Run the analysis:**
-   \`\`\`bash
-   # Create config file
-   echo '{"targets": [{"type": "${targetType}", "name": "${normalizedUrl}"}]}' > config.json
-   
-   # Run analysis
-   slim-leaderboard --output_format ${outputFormat}${verbose ? ' --verbose' : ''}${emoji ? ' --emoji' : ''}${unsorted ? ' --unsorted' : ''} config.json
-   \`\`\`
-
-## Alternative: Use the Full Web Application
-
-For a complete web interface with real-time analysis, clone this repository and run the Flask application locally:
+Clone and run our full web application locally:
 
 \`\`\`bash
-git clone https://github.com/NASA-AMMOS/slim-leaderboard-web.git
+# Clone the repository
+git clone --recursive https://github.com/NASA-AMMOS/slim-leaderboard-web.git
 cd slim-leaderboard-web
+
+# Install dependencies
 pip install -r requirements.txt
+cd slim-leaderboard && pip install -e . && cd ..
+
+# Set your GitHub token (optional - uses server token by default)
 export GITHUB_TOKEN=your_token_here
+
+# Run the application
 python app.py
+\`\`\`
+
+Then visit http://localhost:8081 for real-time analysis with actual results.
+
+### Option 2: Command Line Interface
+
+Install and run SLIM Leaderboard directly:
+
+\`\`\`bash
+# Install SLIM Leaderboard
+pip install git+https://github.com/NASA-AMMOS/slim-leaderboard.git
+
+# Set your GitHub token
+export GITHUB_TOKEN=your_github_token_here
+
+# Create config file
+cat > config.json << 'EOL'
+{
+  "targets": [{
+    "type": "${targetType}",
+    "name": "${normalizedUrl}"
+  }]
+}
+EOL
+
+# Run analysis
+slim-leaderboard --output_format ${outputFormat}${verbose ? ' --verbose' : ''}${emoji ? ' --emoji' : ''}${unsorted ? ' --unsorted' : ''} config.json
+\`\`\`
+
+### Option 3: Docker
+
+\`\`\`bash
+# Pull and run our Docker image
+docker run -p 8081:8081 \\
+  -e GITHUB_TOKEN=your_token_here \\
+  ghcr.io/nasa-ammos/slim-leaderboard-web
 \`\`\`
 
 ## About SLIM

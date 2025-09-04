@@ -1,0 +1,3 @@
+[submodule "slim-leaderboard"]
+	path = slim-leaderboard
+	url = https://github.com/NASA-AMMOS/slim-leaderboard.git

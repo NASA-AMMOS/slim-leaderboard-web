@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLIM Leaderboard - Repository Analysis</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>SLIM Best Practices Leaderboard</h1>
+            <p class="subtitle">Analyze GitHub repositories for SLIM best practices compliance</p>
+        </header>
+
+        <main class="main-content">
+            <section class="input-section">
+                <form id="repository-form" class="repo-form">
+                    <div class="form-group">
+                        <label for="github-token" class="form-label">GitHub Personal Access Token</label>
+                        <input 
+                            type="password" 
+                            id="github-token" 
+                            name="github-token" 
+                            class="form-input" 
+                            placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                            required
+                        >
+                        <small class="form-help">
+                            Required for API access. Generate at <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a>
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="target-type" class="form-label">Analysis Target</label>
+                        <select id="target-type" name="target-type" class="form-select">
+                            <option value="repository">Single Repository</option>
+                            <option value="organization">Entire Organization</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="repo-url" class="form-label" id="url-label">GitHub Repository URL</label>
+                        <input 
+                            type="url" 
+                            id="repo-url" 
+                            name="repo-url" 
+                            class="form-input" 
+                            placeholder="https://github.com/owner/repository"
+                            required
+                        >
+                        <small class="form-help" id="url-help">
+                            Enter a GitHub repository URL or organization URL
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="output-format" class="form-label">Output Format</label>
+                        <select id="output-format" name="output-format" class="form-select">
+                            <option value="TABLE">Table</option>
+                            <option value="TREE">Tree</option>
+                            <option value="MARKDOWN">Markdown</option>
+                            <option value="PLAIN">Plain</option>
+                        </select>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" id="verbose" name="verbose" class="form-checkbox">
+                            <span class="checkmark"></span>
+                            <span class="checkbox-label">Verbose output</span>
+                        </label>
+                        
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" id="emoji" name="emoji" class="form-checkbox">
+                            <span class="checkmark"></span>
+                            <span class="checkbox-label">Use emoji indicators</span>
+                        </label>
+                        
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" id="unsorted" name="unsorted" class="form-checkbox">
+                            <span class="checkmark"></span>
+                            <span class="checkbox-label">Don't sort results</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="analyze-btn">
+                        <span class="btn-text">Analyze</span>
+                        <div class="loader" id="loader" style="display: none;"></div>
+                    </button>
+                    
+                    <div class="progress-section" id="progress-section" style="display: none;">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progress-bar"></div>
+                        </div>
+                        <div class="progress-text" id="progress-text">Initializing...</div>
+                    </div>
+                </form>
+            </section>
+
+            <section class="results-section" id="results-section" style="display: none;">
+                <div class="results-header">
+                    <h2>Analysis Results</h2>
+                    <button id="clear-results" class="clear-btn">Clear Results</button>
+                </div>
+                <div class="results-content" id="results-content"></div>
+            </section>
+
+            <section class="error-section" id="error-section" style="display: none;">
+                <div class="error-content">
+                    <h3>Error</h3>
+                    <p id="error-message"></p>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Powered by <a href="https://nasa-ammos.github.io/slim/" target="_blank" rel="noopener">SLIM</a> • 
+            <a href="https://github.com/NASA-AMMOS/slim-leaderboard" target="_blank" rel="noopener">View Source</a></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

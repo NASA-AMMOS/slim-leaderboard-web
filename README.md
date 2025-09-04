@@ -6,22 +6,30 @@ A professional web interface for analyzing GitHub repositories and organizations
 
 [![SLIM](https://img.shields.io/badge/Best%20Practices%20from-SLIM-blue)](https://nasa-ammos.github.io/slim/)
 
-[INSERT SCREENSHOT OF YOUR SOFTWARE, IF APPLICABLE]
-<!-- ☝️ Screenshot of your software (if applicable) via ![](https://uri-to-your-screenshot) ☝️ -->
+## Description
 
-[INSERT MORE DETAILED DESCRIPTION OF YOUR REPOSITORY HERE]
-<!-- ☝️ Replace with a more detailed description of your repository, including why it was made and whom its intended for.  ☝️ -->
+This web application provides an intuitive interface for running SLIM (Software Lifecycle Improvement & Modernization) best practices analysis on GitHub repositories and organizations. It features:
 
-[INSERT LIST OF IMPORTANT PROJECT / REPO LINKS HERE]
-<!-- example links>
-[Website](INSERT WEBSITE LINK HERE) | [Docs/Wiki](INSERT DOCS/WIKI SITE LINK HERE) | [Discussion Board](INSERT DISCUSSION BOARD LINK HERE) | [Issue Tracker](INSERT ISSUE TRACKER LINK HERE)
--->
+- 🎯 Single repository or entire organization analysis
+- 🎨 Professional black and white theme
+- 📊 Multiple output formats (Table, Tree, Markdown, Plain)
+- ⚡ Real-time progress indicators
+- 🔐 Secure token handling
+- 🚀 Easy deployment options
+
+## Links
+
+[Website](https://nasa-ammos.github.io/slim-leaderboard-web/) | [SLIM Documentation](https://nasa-ammos.github.io/slim/) | [Issue Tracker](https://github.com/NASA-AMMOS/slim-leaderboard-web/issues) | [SLIM Leaderboard Core](https://github.com/NASA-AMMOS/slim-leaderboard)
 
 ## Features
 
-* [INSERT LIST OF FEATURES IMPORTANT TO YOUR USERS HERE]
-  
-<!-- ☝️ Replace with a bullet-point list of your features ☝️ -->
+* **Repository Analysis** - Analyze individual GitHub repositories for SLIM compliance
+* **Organization Scanning** - Scan all repositories in a GitHub organization
+* **Multiple Output Formats** - Table, Tree, Markdown, and Plain text formats
+* **Progress Tracking** - Real-time progress indicators during analysis
+* **Token Flexibility** - Use server token or provide your own for higher rate limits
+* **Professional UI** - Clean, minimalist black and white design
+* **Responsive Design** - Works on desktop and mobile devices
 
 ## Contents
 
@@ -38,39 +46,107 @@ This guide provides a quick way to get started with our project. Please see our 
 
 ### Requirements
 
-* [INSERT LIST OF REQUIREMENTS HERE]
-  
-<!-- ☝️ Replace with a numbered list of your requirements, including hardware if applicable ☝️ -->
+* Python 3.11 or higher
+* pip (Python package manager)
+* Git (for submodules)
+* GitHub Personal Access Token (for API access)
 
 ### Setup Instructions
 
-1. [INSERT STEP-BY-STEP SETUP INSTRUCTIONS HERE, WITH OPTIONAL SCREENSHOTS]
+1. **Clone the repository with submodules:**
+   ```bash
+   git clone --recursive https://github.com/NASA-AMMOS/slim-leaderboard-web.git
+   cd slim-leaderboard-web
+   ```
+
+2. **Install Python dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Install SLIM Leaderboard:**
+   ```bash
+   cd slim-leaderboard
+   pip install -e .
+   cd ..
+   ```
+
+4. **Set your GitHub token (recommended):**
+   ```bash
+   export GITHUB_TOKEN="your_github_token_here"
+   ```
    
-<!-- ☝️ Replace with a numbered list of how to set up your software prior to running ☝️ -->
+   This allows the server to handle analysis without requiring users to provide tokens.
 
 ### Run Instructions
 
-1. [INSERT STEP-BY-STEP RUN INSTRUCTIONS HERE, WITH OPTIONAL SCREENSHOTS]
+#### Option 1: Direct Python
+```bash
+export GITHUB_TOKEN="your_token_here"  # Optional but recommended
+python app.py
+```
 
-<!-- ☝️ Replace with a numbered list of your run instructions, including expected results ☝️ -->
+#### Option 2: Using the production script
+```bash
+export GITHUB_TOKEN="your_token_here"  # Optional but recommended
+bash run_production.sh
+```
+
+#### Option 3: Using Docker
+```bash
+export GITHUB_TOKEN="your_token_here"
+docker-compose up
+```
+
+The application will be available at http://localhost:8081
 
 ### Usage Examples
 
-* [INSERT LIST OF COMMON USAGE EXAMPLES HERE, WITH OPTIONAL SCREENSHOTS]
+1. **Analyze a single repository:**
+   - Select "Single Repository" from the dropdown
+   - Enter repository URL: `https://github.com/NASA-AMMOS/slim-detect-secrets`
+   - Choose output format (e.g., Table)
+   - Click "Analyze"
 
-<!-- ☝️ Replace with a list of your usage examples, including screenshots if possible, and link to external documentation for details ☝️ -->
+2. **Analyze an entire organization:**
+   - Select "Entire Organization" from the dropdown  
+   - Enter organization URL: `https://github.com/nasa-ammos`
+   - Choose output format and options
+   - Click "Analyze"
 
-### Build Instructions (if applicable)
+3. **Using your own token (for higher rate limits):**
+   - Enter your GitHub Personal Access Token in the optional field
+   - This overrides the server's token for your analysis
 
-1. [INSERT STEP-BY-STEP BUILD INSTRUCTIONS HERE, WITH OPTIONAL SCREENSHOTS]
+### Docker Build Instructions
 
-<!-- ☝️ Replace with a numbered list of your build instructions, including expected results / outputs with optional screenshots ☝️ -->
+1. **Build the Docker image:**
+   ```bash
+   docker build -t slim-leaderboard-web .
+   ```
 
-### Test Instructions (if applicable)
+2. **Run the container:**
+   ```bash
+   docker run -p 8081:8081 -e GITHUB_TOKEN="your_token" slim-leaderboard-web
+   ```
 
-1. [INSERT STEP-BY-STEP TEST INSTRUCTIONS HERE, WITH OPTIONAL SCREENSHOTS]
+### Test Instructions
 
-<!-- ☝️ Replace with a numbered list of your test instructions, including expected results / outputs with optional screenshots ☝️ -->
+1. **Test the API endpoint:**
+   ```bash
+   curl -X POST http://localhost:8081/api/analyze \
+     -H "Content-Type: application/json" \
+     -d '{
+       "repository_url": "https://github.com/NASA-AMMOS/slim-detect-secrets",
+       "target_type": "repository",
+       "output_format": "TABLE"
+     }'
+   ```
+
+2. **Test the health check:**
+   ```bash
+   curl http://localhost:8081/api/health
+   ```
 
 ## Changelog
 

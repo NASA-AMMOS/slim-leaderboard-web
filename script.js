@@ -54,12 +54,7 @@ class SlimLeaderboardApp {
         const verbose = formData.get('verbose') === 'on';
         const emoji = formData.get('emoji') === 'on';
         const unsorted = formData.get('unsorted') === 'on';
-        const githubToken = formData.get('github-token');
-
-        if (!githubToken) {
-            this.showError('GitHub Personal Access Token is required');
-            return;
-        }
+        const githubToken = formData.get('github-token') || '';
 
         if (!this.validateGitHubUrl(targetUrl, targetType)) {
             const errorMsg = targetType === 'organization' 

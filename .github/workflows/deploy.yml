@@ -7,6 +7,11 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -29,232 +34,47 @@ jobs:
       run: |
         cd slim-leaderboard
         pip install -e .
+        cd ..
         
     - name: Install Flask dependencies
       run: |
         pip install -r requirements.txt
         
-    - name: Create static GitHub Pages version
+    - name: Prepare GitHub Pages deployment
       run: |
-        mkdir -p gh-pages
-        # Copy static files
-        cp index.html gh-pages/
-        cp styles.css gh-pages/
-        # Create modified script.js for GitHub Pages (static version)
-        sed 's|/api/analyze|#|g' script.js > gh-pages/script.js
+        # Copy the docs folder content as-is for GitHub Pages
+        # The docs folder contains the static version with script-static.js
+        cp -r docs/* .
         
-        # Create static version of script that shows instructions
-        cat > gh-pages/script.js << 'EOF'
-class SlimLeaderboardApp {
-    constructor() {
-        this.form = document.getElementById('repository-form');
-        this.submitBtn = document.getElementById('analyze-btn');
-        this.loader = document.getElementById('loader');
-        this.btnText = document.querySelector('.btn-text');
-        this.resultsSection = document.getElementById('results-section');
-        this.resultsContent = document.getElementById('results-content');
-        this.errorSection = document.getElementById('error-section');
-        this.errorMessage = document.getElementById('error-message');
-        this.clearBtn = document.getElementById('clear-results');
-        this.targetTypeSelect = document.getElementById('target-type');
-        this.urlLabel = document.getElementById('url-label');
-        this.urlHelp = document.getElementById('url-help');
-        this.repoUrlInput = document.getElementById('repo-url');
-        this.progressSection = document.getElementById('progress-section');
-        this.progressBar = document.getElementById('progress-bar');
-        this.progressText = document.getElementById('progress-text');
-        this.githubTokenInput = document.getElementById('github-token');
+        # Rename static script for GitHub Pages
+        if [ -f script-static.js ]; then
+          mv script-static.js script.js
+        fi
         
-        this.initializeEventListeners();
-    }
-
-    initializeEventListeners() {
-        this.form.addEventListener('submit', this.handleFormSubmit.bind(this));
-        this.clearBtn.addEventListener('click', this.clearResults.bind(this));
-        this.targetTypeSelect.addEventListener('change', this.handleTargetTypeChange.bind(this));
+        # Create _config.yml for Jekyll processing
+        echo "theme: jekyll-theme-minimal" > _config.yml
         
-        // Initialize the form state
-        this.handleTargetTypeChange();
-    }
-
-    handleTargetTypeChange() {
-        const targetType = this.targetTypeSelect.value;
+    - name: Setup Pages
+      uses: actions/configure-pages@v3
+      
+    - name: Build with Jekyll
+      uses: actions/jekyll-build-pages@v1
+      with:
+        source: ./
+        destination: ./_site
         
-        if (targetType === 'organization') {
-            this.urlLabel.textContent = 'GitHub Organization URL';
-            this.repoUrlInput.placeholder = 'https://github.com/nasa-ammos';
-            this.urlHelp.textContent = 'Enter a GitHub organization URL (e.g., https://github.com/nasa-ammos) - note: lowercase';
-        } else {
-            this.urlLabel.textContent = 'GitHub Repository URL';
-            this.repoUrlInput.placeholder = 'https://github.com/owner/repository';
-            this.urlHelp.textContent = 'Enter a GitHub repository URL';
-        }
-    }
-
-    async handleFormSubmit(event) {
-        event.preventDefault();
-        
-        const formData = new FormData(this.form);
-        const targetUrl = formData.get('repo-url');
-        const targetType = formData.get('target-type');
-        const outputFormat = formData.get('output-format');
-        const verbose = formData.get('verbose') === 'on';
-        const emoji = formData.get('emoji') === 'on';
-        const unsorted = formData.get('unsorted') === 'on';
-        const githubToken = formData.get('github-token');
-
-        if (!githubToken) {
-            this.showError('GitHub Personal Access Token is required');
-            return;
-        }
-
-        if (!this.validateGitHubUrl(targetUrl, targetType)) {
-            const errorMsg = targetType === 'organization' 
-                ? 'Please enter a valid GitHub organization URL' 
-                : 'Please enter a valid GitHub repository URL';
-            this.showError(errorMsg);
-            return;
-        }
-
-        this.setLoadingState(true);
-        this.hideError();
-        this.hideResults();
-        this.showProgress(targetType);
-
-        try {
-            const result = await this.analyzeTarget({
-                targetUrl,
-                targetType,
-                outputFormat,
-                verbose,
-                emoji,
-                unsorted,
-                githubToken
-            });
-            
-            this.hideProgress();
-            this.showResults(result, outputFormat);
-        } catch (error) {
-            this.hideProgress();
-            this.showError(error.message || 'An error occurred while analyzing the target');
-        } finally {
-            this.setLoadingState(false);
-        }
-    }
-
-    validateGitHubUrl(url, targetType) {
-        if (targetType === 'organization') {
-            // Pattern for organization: https://github.com/org-name
-            const orgPattern = /^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/?$/;
-            return orgPattern.test(url);
-        } else {
-            // Pattern for repository: https://github.com/owner/repo
-            const repoPattern = /^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+\/?$/;
-            return repoPattern.test(url);
-        }
-    }
-
-    async analyzeTarget(options) {
-        const { targetUrl, targetType, outputFormat, verbose, emoji, unsorted, githubToken } = options;
-        
-        // Normalize the URL for organization (remove trailing slash, convert to lowercase)
-        let normalizedUrl = targetUrl;
-        if (targetType === 'organization') {
-            normalizedUrl = targetUrl.toLowerCase().replace(/\/$/, '');
-        }
-
-        // For GitHub Pages static version, show instructions
-        const analysisNote = `# SLIM Best Practices Analysis
-
-**Target:** ${normalizedUrl}
-**Type:** ${targetType}
-**Format:** ${outputFormat}
-
-## GitHub Pages Static Version - Instructions
-
-This is the static GitHub Pages version. To run the actual analysis:
-
-### Option 1: Use Command Line
-
-1. **Install SLIM Leaderboard:**
-   \`\`\`bash
-   pip install git+https://github.com/NASA-AMMOS/slim-leaderboard.git
-   \`\`\`
-
-2. **Set your GitHub token:**
-   \`\`\`bash
-   export GITHUB_TOKEN="${githubToken.substring(0, 8)}..."
-   \`\`\`
-
-3. **Run the analysis:**
-   \`\`\`bash
-   # Create config file
-   echo '{"targets": [{"type": "${targetType}", "name": "${normalizedUrl}"}]}' > config.json
-   
-   # Run analysis
-   slim-leaderboard --output_format ${outputFormat}${verbose ? ' --verbose' : ''}${emoji ? ' --emoji' : ''}${unsorted ? ' --unsorted' : ''} config.json
-   \`\`\`
-
-### Option 2: Use Full Web Application Locally
-
-For real-time web analysis, clone and run the Flask application:
-
-\`\`\`bash
-git clone --recursive https://github.com/NASA-AMMOS/slim-leaderboard-web.git
-cd slim-leaderboard-web
-pip install -r requirements.txt
-pip install -e slim-leaderboard/
-export GITHUB_TOKEN=your_token_here
-python app.py
-\`\`\`
-
-Then visit http://localhost:8081 for the full interactive experience.
-
-## About SLIM
-
-The Software Lifecycle Improvement & Modernization (SLIM) initiative provides best practices for NASA AMMOS software development.
-
-**Learn more:** [nasa-ammos.github.io/slim](https://nasa-ammos.github.io/slim/)
-        `;
-
-        return {
-            success: true,
-            output: analysisNote,
-            target_url: normalizedUrl,
-            target_type: targetType,
-            format: outputFormat
-        };
-    }
-
-    showProgress(targetType) {
-        const isOrg = targetType === 'organization';
-        const message = isOrg 
-            ? 'Generating analysis instructions...' 
-            : 'Generating analysis instructions...';
-        
-        this.progressText.textContent = message;
-        this.progressSection.style.display = 'block';
-        this.progressSection.classList.add('fade-in');
-        
-        // Quick progress for instruction generation
-        this.simulateProgress(false);
-    }
-
-    simulateProgress(isOrganization) {
-        const duration = 3000; // 3 seconds for instruction generation
-        const interval = 100;
-        const totalSteps = duration / interval;
-        let currentStep = 0;
-        
-        this.progressInterval = setInterval(() => {
-            currentStep++;
-            const progress = (currentStep / totalSteps) * 100;
-            this.progressBar.style.width = `${progress}%`;
-            
-            if (currentStep >= totalSteps) {
-                clearInterval(this.progressInterval);
-                this.progressText.textContent = 'Instructions ready!';
-                this.progressBar.style.width = '100%';
-            }
-        }, interval);
-    }
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v2
+      
+  deploy-pages:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v2

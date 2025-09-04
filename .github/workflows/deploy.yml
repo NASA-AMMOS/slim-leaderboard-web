@@ -26,7 +26,7 @@ jobs:
         submodules: recursive
         
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         
@@ -55,7 +55,7 @@ jobs:
         echo "theme: jekyll-theme-minimal" > _config.yml
         
     - name: Setup Pages
-      uses: actions/configure-pages@v3
+      uses: actions/configure-pages@v4
       
     - name: Build with Jekyll
       uses: actions/jekyll-build-pages@v1
@@ -64,7 +64,7 @@ jobs:
         destination: ./_site
         
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v2
+      uses: actions/upload-pages-artifact@v3
       
   deploy-pages:
     environment:
@@ -77,4 +77,4 @@ jobs:
     steps:
     - name: Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@v2
+      uses: actions/deploy-pages@v4
